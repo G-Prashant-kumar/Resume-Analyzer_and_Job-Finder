@@ -55,7 +55,20 @@ st.markdown('<h1 class="center-header">RESUME ANALYZER AND JOB FINDER</h1>', uns
 # Main options using Streamlit Radio
 option = st.radio("Choose what you want to do:", ["Find Jobs Based on Skills", "Analyze Resume"])
 
-import asyncio
+
+import os
+import requests
+
+def download_model():
+    file_id = "16O889rgUvMWA09vWd04fn90uBIxCOLpf"
+    url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    response = requests.get(url)
+    with open("clf.pkl", "wb") as f:
+        f.write(response.content)
+
+# Download only if not already present
+if not os.path.exists("clf.pkl"):
+    download_model()
 
 try:
     asyncio.get_running_loop()
@@ -136,12 +149,14 @@ def sentence_level_match(resume_text, jd_text, model, top_k=10):
     return df_matches
 
 def extract_text_from_pdf(file):
-        """Extract text from PDF files."""
-        pdf_reader = PyPDF2.PdfReader(file)
-        text = ''
-        for page in pdf_reader.pages:
-            text += page.extract_text()
-        return text
+    pdf_reader = PyPDF2.PdfReader(file)
+    text = ''
+    for page in pdf_reader.pages:
+        page_text = page.extract_text()
+        if page_text:
+            text += page_text + ' '
+    return text.strip()
+
 
 
 def extract_text_from_docx(file):
